@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+from argon2 import PasswordHasher
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
@@ -14,6 +15,8 @@ from fast_zero.schemas import (
 )
 
 users_router = APIRouter(prefix='/users', tags=['users'])
+
+ph = PasswordHasher()
 
 
 @users_router.post(
@@ -37,6 +40,8 @@ def create_user(user: UserSchema, session: SessionDep):
             raise HTTPException(
                 status_code=HTTPStatus.CONFLICT, detail='Email already exists'
             )
+
+    user.password = ph.hash(user.password)
 
     db_user = User(
         username=user.username, email=user.email, password=user.password
@@ -108,7 +113,7 @@ def update_user(user_id: int, user: UserSchema, session: SessionDep):
 
     db_user.username = user.username
     db_user.email = user.email
-    db_user.password = user.password
+    db_user.password = ph.hash(user.password)
 
     session.add(db_user)
     session.commit()
