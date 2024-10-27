@@ -1,4 +1,7 @@
-from pydantic import BaseModel, EmailStr
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class Message(BaseModel):
@@ -19,6 +22,11 @@ class UserPublic(BaseModel):
     id: int
     username: str
     email: EmailStr
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
 
 
 class UserList(BaseModel):
