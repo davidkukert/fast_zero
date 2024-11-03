@@ -87,16 +87,20 @@ def test_read_nonexistent_user(client):
     assert response.json() == {'detail': 'User not found'}
 
 
-def test_update_user(client, user):
+def test_update_user(client, user, token):
     user_data = {
         'username': 'updated_test',
         'email': 'updated_test@example.com',
         'password': 'secret',
     }
-    response = client.put('/users/1', json=user_data)
+    response = client.put(
+        f'/users/{user.id}',
+        headers={'Authorization': f'Bearer {token}'},
+        json=user_data,
+    )
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
-        'id': 1,
+        'id': user.id,
         'username': 'updated_test',
         'email': 'updated_test@example.com',
         'created_at': user.created_at.strftime('%Y-%m-%dT%H:%M:%S'),
@@ -104,46 +108,68 @@ def test_update_user(client, user):
     }
 
 
-def test_update_nonexistent_user(client):
-    user_data = {
-        'username': 'nonexistent_test',
-        'email': 'nonexistent_test@example.com',
-        'password': 'secret',
-    }
-    response = client.put('/users/100', json=user_data)
-    assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {'detail': 'User not found'}
-
-
-def test_update_user_username_conflict(client, user, user_second):
+def test_update_user_username_conflict(client, user, user_second, token):
     user_data = {
         'username': 'test_second',
         'email': 'test_second@example.com',
         'password': 'secret',
     }
-    response = client.put('/users/1', json=user_data)
+    response = client.put(
+        f'/users/{user.id}',
+        headers={'Authorization': f'Bearer {token}'},
+        json=user_data,
+    )
     assert response.status_code == HTTPStatus.CONFLICT
     assert response.json() == {'detail': 'Username already exists'}
 
 
-def test_update_user_email_conflict(client, user, user_second):
+def test_update_user_email_conflict(client, user, user_second, token):
     user_data = {
         'username': 'updated_test',
         'email': 'test_second@example.com',
         'password': 'secret',
     }
-    response = client.put('/users/1', json=user_data)
+    response = client.put(
+        f'/users/{user.id}',
+        headers={'Authorization': f'Bearer {token}'},
+        json=user_data,
+    )
     assert response.status_code == HTTPStatus.CONFLICT
     assert response.json() == {'detail': 'Email already exists'}
 
 
-def test_delete_user(client, user):
-    response = client.delete('/users/1')
+def test_delete_user(client, user, token):
+    response = client.delete(
+        f'/users/{user.id}', headers={'Authorization': f'Bearer {token}'}
+    )
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {'message': 'User deleted!'}
 
 
-def test_delete_nonexistent_user(client):
-    response = client.delete('/users/100')
-    assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {'detail': 'User not found'}
+def test_get_token(client, user):
+    response = client.post(
+        '/auth/token',
+        data={
+            'username': user.username,
+            'password': user.clean_password,
+        },
+    )
+
+    token = response.json()
+
+    assert response.status_code == HTTPStatus.OK
+    assert token['token_type'] == 'Bearer'
+    assert 'access_token' in token
+
+
+def test_get_token_invalid_credentials(client):
+    response = client.post(
+        '/auth/token',
+        data={
+            'username': 'test',
+            'password': 'wrong_secret',
+        },
+    )
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+    assert response.json() == {'detail': 'Incorrect username or password'}

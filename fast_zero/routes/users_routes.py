@@ -1,6 +1,5 @@
 from http import HTTPStatus
 
-from argon2 import PasswordHasher
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
@@ -13,10 +12,9 @@ from fast_zero.schemas import (
     UserPublic,
     UserSchema,
 )
+from fast_zero.security import CurrentUser, get_password_hash
 
 users_router = APIRouter(prefix='/users', tags=['users'])
-
-ph = PasswordHasher()
 
 
 @users_router.post(
@@ -41,10 +39,10 @@ def create_user(user: UserSchema, session: SessionDep):
                 status_code=HTTPStatus.CONFLICT, detail='Email already exists'
             )
 
-    user.password = ph.hash(user.password)
-
     db_user = User(
-        username=user.username, email=user.email, password=user.password
+        username=user.username,
+        email=user.email,
+        password=get_password_hash(user.password),
     )
 
     session.add(db_user)
@@ -86,11 +84,16 @@ def read_user(user_id: int, session: SessionDep):
     '/{user_id}',
     response_model=UserPublic,
 )
-def update_user(user_id: int, user: UserSchema, session: SessionDep):
-    db_user = session.scalar(select(User).where(User.id == user_id))
-    if db_user is None:
+def update_user(
+    user_id: int,
+    user: UserSchema,
+    session: SessionDep,
+    current_user: CurrentUser,
+):
+    if current_user.id != user_id:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='Not permission',
         )
 
     db_user_conflict = session.scalar(
@@ -111,15 +114,15 @@ def update_user(user_id: int, user: UserSchema, session: SessionDep):
                 status_code=HTTPStatus.CONFLICT, detail='Email already exists'
             )
 
-    db_user.username = user.username
-    db_user.email = user.email
-    db_user.password = ph.hash(user.password)
+    current_user.username = user.username
+    current_user.email = user.email
+    current_user.password = get_password_hash(user.password)
 
-    session.add(db_user)
+    session.add(current_user)
     session.commit()
-    session.refresh(db_user)
+    session.refresh(current_user)
 
-    return db_user
+    return current_user
 
 
 @users_router.delete(
@@ -127,14 +130,18 @@ def update_user(user_id: int, user: UserSchema, session: SessionDep):
     status_code=HTTPStatus.OK,
     response_model=Message,
 )
-def delete_user(user_id: int, session: SessionDep):
-    db_user = session.scalar(select(User).where(User.id == user_id))
-    if db_user is None:
+def delete_user(
+    user_id: int,
+    session: SessionDep,
+    current_user: CurrentUser,
+):
+    if current_user.id != user_id:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='Not permission',
         )
 
-    session.delete(db_user)
+    session.delete(current_user)
     session.commit()
 
     return {'message': 'User deleted!'}

@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 from fastapi import FastAPI
 
+from fast_zero.routes.auth_routes import auth_router
 from fast_zero.routes.users_routes import users_router
 from fast_zero.schemas import Message
 
@@ -14,3 +15,4 @@ def read_root():
 
 
 app.include_router(users_router)
+app.include_router(auth_router)
