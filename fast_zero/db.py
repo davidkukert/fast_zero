@@ -14,4 +14,4 @@ def get_session():  # pragma: no cover
         yield session
 
 
-SessionDep = Annotated[Session, Depends(get_session)]
+T_Session = Annotated[Session, Depends(get_session)]

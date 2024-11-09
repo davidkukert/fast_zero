@@ -3,7 +3,7 @@ from http import HTTPStatus
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
-from fast_zero.db import SessionDep
+from fast_zero.db import T_Session
 from fast_zero.models import User
 from fast_zero.schemas import (
     Message,
@@ -12,7 +12,7 @@ from fast_zero.schemas import (
     UserPublic,
     UserSchema,
 )
-from fast_zero.security import CurrentUser, get_password_hash
+from fast_zero.security import T_CurrentUser, get_password_hash
 
 users_router = APIRouter(prefix='/users', tags=['users'])
 
@@ -22,7 +22,7 @@ users_router = APIRouter(prefix='/users', tags=['users'])
     status_code=HTTPStatus.CREATED,
     response_model=UserPublic,
 )
-def create_user(user: UserSchema, session: SessionDep):
+def create_user(user: UserSchema, session: T_Session):
     db_user = session.scalar(
         select(User).where(
             (User.username == user.username) | (User.email == user.email)
@@ -57,7 +57,7 @@ def create_user(user: UserSchema, session: SessionDep):
     response_model=UserList,
 )
 def read_users(
-    session: SessionDep,
+    session: T_Session,
     limit: int = 10,
     skip: int = 0,
 ):
@@ -69,7 +69,7 @@ def read_users(
     '/{user_id}',
     response_model=UserDetails,
 )
-def read_user(user_id: int, session: SessionDep):
+def read_user(user_id: int, session: T_Session):
     user_data = session.scalar(select(User).where(User.id == user_id))
 
     if user_data is None:
@@ -87,8 +87,8 @@ def read_user(user_id: int, session: SessionDep):
 def update_user(
     user_id: int,
     user: UserSchema,
-    session: SessionDep,
-    current_user: CurrentUser,
+    session: T_Session,
+    current_user: T_CurrentUser,
 ):
     if current_user.id != user_id:
         raise HTTPException(
@@ -132,8 +132,8 @@ def update_user(
 )
 def delete_user(
     user_id: int,
-    session: SessionDep,
-    current_user: CurrentUser,
+    session: T_Session,
+    current_user: T_CurrentUser,
 ):
     if current_user.id != user_id:
         raise HTTPException(
