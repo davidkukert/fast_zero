@@ -2,8 +2,8 @@ from http import HTTPStatus
 
 from fastapi import FastAPI
 
-from fast_zero.routes.auth_routes import auth_router
-from fast_zero.routes.users_routes import users_router
+from fast_zero.routers.auth_router import auth_router
+from fast_zero.routers.users_router import users_router
 from fast_zero.schemas import Message
 
 app = FastAPI()
