@@ -7,7 +7,7 @@ from fast_zero.schemas import UserPublic
 def test_create_user(client):
     user_data = {
         'username': 'test',
-        'email': 'test@example.com',
+        'email': 'test@test.com',
         'password': 'secret',
     }
     response = client.post('/users', json=user_data)
@@ -15,7 +15,7 @@ def test_create_user(client):
     assert response.json() == {
         'id': 1,
         'username': 'test',
-        'email': 'test@example.com',
+        'email': 'test@test.com',
         'created_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S'),
         'updated_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S'),
     }
@@ -23,8 +23,8 @@ def test_create_user(client):
 
 def test_create_user_username_conflict(client, user):
     user_data = {
-        'username': 'test',
-        'email': 'test@example.com',
+        'username': user.username,
+        'email': 'test@test.com',
         'password': 'secret',
     }
     response = client.post('/users', json=user_data)
@@ -35,7 +35,7 @@ def test_create_user_username_conflict(client, user):
 def test_create_user_email_conflict(client, user):
     user_data = {
         'username': 'test_one',
-        'email': 'test@example.com',
+        'email': user.email,
         'password': 'secret',
     }
     response = client.post('/users', json=user_data)
@@ -104,8 +104,8 @@ def test_update_user(client, user, token):
 
 def test_update_user_username_conflict(client, user, user_second, token):
     user_data = {
-        'username': 'test_second',
-        'email': 'test_second@example.com',
+        'username': user_second.username,
+        'email': user.email,
         'password': 'secret',
     }
     response = client.put(
@@ -119,8 +119,8 @@ def test_update_user_username_conflict(client, user, user_second, token):
 
 def test_update_user_email_conflict(client, user, user_second, token):
     user_data = {
-        'username': 'updated_test',
-        'email': 'test_second@example.com',
+        'username': user.username,
+        'email': user_second.email,
         'password': 'secret',
     }
     response = client.put(
