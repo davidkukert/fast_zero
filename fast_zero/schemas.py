@@ -3,6 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
+from fast_zero.models import TodoState
+
 
 class Message(BaseModel):
     message: str
@@ -44,3 +46,34 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str | None = None
+
+
+class TodoSchema(BaseModel):
+    title: str
+    description: str
+    state: TodoState
+
+
+class TodoPublic(TodoSchema):
+    id: int
+
+
+class TodoList(BaseModel):
+    todos: list[TodoPublic]
+
+
+class FilterPage(BaseModel):
+    limit: int | None = None
+    offset: int | None = None
+
+
+class FilterTodo(FilterPage):
+    title: str | None = None
+    description: str | None = None
+    state: TodoState | None = None
+
+
+class TodoUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    state: TodoState | None = None
