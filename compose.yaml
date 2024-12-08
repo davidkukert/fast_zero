@@ -1,0 +1,22 @@
+name: fast-zero-container
+
+services:
+    fastzero_database:
+        image: bitnami/postgresql:16.4.0
+        ports:
+            - '5432:5432'
+        environment:
+            - POSTGRES_USER=user_fast_zero
+            - POSTGRES_PASSWORD=user_fast_zero
+            - POSTGRES_DB=fast_zero
+
+    fastzero_app:
+        image: fastzero_app
+        entrypoint: ./entrypoint.sh
+        build: .
+        ports:
+            - "8000:8000"
+        depends_on:
+            - fastzero_database
+        environment:
+            DATABASE_URL: postgresql+psycopg://user_fast_zero:user_fast_zero@fastzero_database:5432/fast_zero

@@ -28,6 +28,7 @@ class UserPublic(BaseModel):
     updated_at: Optional[datetime] = None
     model_config = ConfigDict(
         from_attributes=True,
+        json_encoders={datetime: lambda dt: dt.strftime('%Y-%m-%dT%H:%M:%S')},
     )
 
 
