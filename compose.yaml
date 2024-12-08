@@ -9,6 +9,9 @@ services:
             - POSTGRES_USER=user_fast_zero
             - POSTGRES_PASSWORD=user_fast_zero
             - POSTGRES_DB=fast_zero
+        volumes:
+            - fastzero_database_data:/bitnami/postgresql
+        
 
     fastzero_app:
         image: fastzero_app
@@ -20,3 +23,6 @@ services:
             - fastzero_database
         environment:
             DATABASE_URL: postgresql+psycopg://user_fast_zero:user_fast_zero@fastzero_database:5432/fast_zero
+
+volumes:
+    fastzero_database_data:
