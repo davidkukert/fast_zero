@@ -1,0 +1,20 @@
+# fly.toml app configuration file generated for fast-zero-divine-rain-4175 on 2024-12-10T05:03:29-03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'fast-zero-divine-rain-4175'
+primary_region = 'gig'
+
+[build]
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  size = 'shared-cpu-1x'
